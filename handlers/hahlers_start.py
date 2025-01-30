@@ -16,6 +16,9 @@ BASE_COMMANDS = {
     "start": {
         "name": "Старт",
         "info": "начать работу со мной"},
+    "payment": {
+        "name": "Платежи",
+        "info": "Тариф и оплата"},
 }
 
 START_COMMANDS = BASE_COMMANDS.copy()

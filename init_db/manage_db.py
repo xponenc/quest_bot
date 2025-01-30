@@ -1,4 +1,4 @@
-from orm_models import Base
+from db.orm_models import Base
 from services.db_session import sync_engine
 
 

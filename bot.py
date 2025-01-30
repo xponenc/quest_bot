@@ -6,6 +6,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from dotenv import load_dotenv
 
 from handlers.hahlers_start import start_router
+from handlers.handlers_payments import payment_router
 from handlers.handlers_quest import quest_router
 from services.loggers import logger
 
@@ -17,6 +18,7 @@ dp = Dispatcher(storage=MemoryStorage())
 dp.include_routers(
     start_router,
     quest_router,
+    payment_router,
 )
 
 

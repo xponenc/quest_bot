@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     YANDEX_API_KEY: str
     YANDEX_FOLDER_ID: str
+    YOOKASSA_TEST_SHOP: str
+    YOOKASSA_TEST_KEY: str
+    TG_YOOKASSA_TEST_TOKEN: str
 
     @property
     def DATABASE_URL_asyncpg(self):

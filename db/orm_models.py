@@ -3,10 +3,10 @@ from typing import Annotated, Optional
 
 from dotenv import load_dotenv
 import os
-from datetime import datetime
+from datetime import datetime, date
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy import (Table, MetaData, Column, String, Integer, BigInteger, Text, Numeric,
-                        ForeignKey, DateTime, Boolean, text, JSON)
+                        ForeignKey, DateTime, Boolean, text, JSON, TIMESTAMP, Date)
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, relationship
 
 load_dotenv()
@@ -16,7 +16,6 @@ DB_HOST = os.getenv('DB_HOST')
 DB_PORT = os.getenv('DB_PORT')
 DB_NAME = os.getenv('DB_NAME')
 DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-
 
 str_256 = Annotated[str, 256]
 str_1024 = Annotated[str, 1024]
@@ -65,6 +64,11 @@ class UsersORM(Base):
     username: Mapped[str_256]
     name: Mapped[str_256]
     registered_at: Mapped[created_at]
+    name: Mapped[str_256]
+    tariff_plan: Mapped[str] = mapped_column(
+        String, nullable=True, default="free")
+    subscription_end_date: Mapped[date | None] = mapped_column(
+        Date, nullable=True, default=date.today)
 
     games: Mapped[list["GamesORM"]] = relationship(
         "GamesORM",
@@ -126,17 +130,51 @@ class GameStagesORM(Base):
         back_populates="stages",
     )
 
-#
-# class StageOptionsORM(Base):
-#     __tablename__ = "stage_options"
-#
-#     id: Mapped[int_pk]
-#     description: Mapped[str_1024]
-#     stage_id: Mapped[int] = mapped_column(ForeignKey("game_stages.id", ondelete="CASCADE"))
-#
-#     created_at: Mapped[created_at]
-#
-#     stage: Mapped["GameStagesORM"] = relationship(
-#         "GameStagesORM",
-#         back_populates="options",
-#     )
+
+class PaymentStatusType(enum.Enum):
+    created = "created"
+    canceled = "canceled"
+    paid = "paid"
+
+
+class PaymentRecordORM(Base):
+    __tablename__ = "payment_records"
+    id: Mapped[int] = mapped_column(
+        BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey(
+        UsersORM.id), nullable=False)  # ID пользователя
+    # payment_id: Mapped[str] = mapped_column(
+    #     String(255), nullable=False)  # Уникальный ID платежа
+    status: Mapped[str] = Mapped[GameStageType]
+    refundable: Mapped[bool] = mapped_column(
+        Boolean, nullable=True)  # Возможность возврата
+
+    # Поля для суммы платежа
+    amount_value: Mapped[Optional[float]] = mapped_column(
+        Numeric(10, 2), nullable=True)  # Сумма платежа
+    amount_currency: Mapped[str] = mapped_column(
+        String, nullable=True)  # Валюта платежа
+
+    # Поля для дохода
+    income_amount_value: Mapped[Optional[float]] = mapped_column(
+        Numeric(10, 2), nullable=True)  # Сумма дохода
+    income_amount_currency: Mapped[str] = mapped_column(
+        String, nullable=True)  # Валюта дохода
+
+    description: Mapped[str | None] = mapped_column(
+        String, nullable=True)  # Описание
+    payment_method: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True)  # Метод оплаты
+    recipient: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True)  # Получатель
+    authorization_details: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True)  # Авторизационные данные
+    refunded_amount: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True)  # Данные о возврате
+    metadata_payment: Mapped[dict | None] = mapped_column(
+        JSON, nullable=True)  # Метаданные
+    provider_payment_charge_id = Mapped[str_256 | None]
+    telegram_payment_charge_id = Mapped[str_256 | None]
+    created_at: Mapped[created_at]
+    paid_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP, nullable=True, )  # Дата завершения платежа (если оплачено)

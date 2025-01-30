@@ -7,7 +7,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove
 
 from keyboards.game_keyboards import options_keyboard
-from orm_models import GameStageType
+from db.orm_models import GameStageType
 from services.db_process import add_new_game_to_db, add_new_gamestage_to_db, add_user_choice_to_stage
 from services.gpt import gpt_create_new_game, gpt_create_new_stage
 from services.loggers import logger
